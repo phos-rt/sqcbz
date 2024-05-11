@@ -32,8 +32,7 @@ Description:
   (todo) If FILE is not specified, or FILE is -, sqcbz will read standard
   input.
 
-  (todo) If OUTPUT_FILE is not specified, sqcbz will output to standard
-  output.
+  If OUTPUT_FILE is not specified, sqcbz will output to standard output.
 `
 
 	fmt.Println(help)
@@ -65,9 +64,13 @@ func NewApp() App {
 }
 
 func (app *App) squash() error {
-	fo, err := os.Create(app.output_file)
-	if err != nil {
-		return err
+	fo := os.Stdout
+	if app.output_file != "" {
+		var err error
+		fo, err = os.Create(app.output_file)
+		if err != nil {
+			return err
+		}
 	}
 
 	gidx := 0
