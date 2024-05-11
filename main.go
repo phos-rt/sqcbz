@@ -13,7 +13,8 @@ import (
 type App struct {
 	input_files []string
 	output_file string
-	file_pad    int
+	rename      bool
+	rename_pad  int
 }
 
 func ShowHelp() {
@@ -49,7 +50,8 @@ func NewApp() App {
 	help2 = flag.Bool("help", false, "prints the help menu and exits")
 
 	flag.StringVar(&app.output_file, "out", "", "write the squashed CBZs to the given path")
-	flag.IntVar(&app.file_pad, "pad", 6, "amount of padding used when renaming each file inside the CBZ files.\nA padding of 4 on filename '1.png' results in '0001.png'")
+	flag.BoolVar(&app.rename, "rename", false, "renames the files sequentially by order of insertion in the CBZ file")
+	flag.IntVar(&app.rename_pad, "rename-pad", 8, "amount of padding used when renaming each file inside the CBZ files.\nA padding of 4 on filename '1.png' results in '0001.png'")
 	flag.Parse()
 
 	if *help1 || *help2 {
@@ -70,7 +72,7 @@ func (app *App) squash() error {
 
 	gidx := 0
 	w := zip.NewWriter(fo)
-	max_files := int(math.Pow10(app.file_pad)) - 1
+	max_files := int(math.Pow10(app.rename_pad)) - 1
 	for _, file := range app.input_files {
 		r, err := zip.OpenReader(file)
 		if err != nil {
@@ -78,16 +80,18 @@ func (app *App) squash() error {
 		}
 
 		for _, fi := range r.File {
-			if gidx > max_files {
-				return errors.New(fmt.Sprintf(
-					"reached maximum amount of files with %d padding, try increasing it",
-					app.file_pad,
-				))
+			if app.rename {
+				if gidx > max_files {
+					return errors.New(fmt.Sprintf(
+						"reached maximum amount of files with %d padding, try increasing it",
+						app.rename_pad,
+					))
+				}
+
+				fi.Name = fmt.Sprintf("%0*d%s", app.rename_pad, gidx, filepath.Ext(fi.Name))
 			}
 
-			fi.Name = fmt.Sprintf("%0*d%s", app.file_pad, gidx, filepath.Ext(fi.Name))
 			w.Copy(fi)
-
 			gidx += 1
 		}
 
