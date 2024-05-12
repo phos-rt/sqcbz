@@ -27,15 +27,11 @@ func ShowHelp() {
 
 Usage:
   - sqcbz [FILE]...
-  - sqcbz -o [OUTPUT_FILE] [FILE]...
+  - sqcbz -out [OUTPUT_FILE] [FILE]...
 
 Description:
-  Given a list of input FILEs, sqcbz squashes all of them together by
-  input order. The files inside the CBZ zip are renamed to their
-  position relative to the total amount of files to be processed.
-
-  (todo) If FILE is not specified, or FILE is -, sqcbz will read standard
-  input.
+  Given a list of FILEs, sqcbz squashes all of them together following
+  the order in which they were passed and outputs the resulting CBZ file.
 
   If OUTPUT_FILE is not specified, sqcbz will output to standard output.
 `
