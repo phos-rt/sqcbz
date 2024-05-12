@@ -1,0 +1,22 @@
+sqcbz is a tool to squash multiple CBZ files into one.
+
+Usage:
+  - sqcbz [FILE]...
+  - sqcbz -out [OUTPUT_FILE] [FILE]...
+
+Description:
+  Given a list of FILEs, sqcbz squashes all of them together following
+  the order in which they were passed and outputs the resulting CBZ file.
+
+  If OUTPUT_FILE is not specified, sqcbz will output to standard output.
+
+  -h	alias for -help
+  -help
+    	prints the help menu and exits
+  -out string
+    	write the squashed CBZs to the given path
+  -rename
+    	renames the files sequentially by order of insertion in the CBZ file
+  -rename-pad int
+    	amount of padding used when renaming each file inside the CBZ files.
+    	A padding of 4 on filename '1.png' results in '0001.png' (default 8)
