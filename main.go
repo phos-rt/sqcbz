@@ -64,6 +64,10 @@ func NewApp() App {
 	}
 
 	app.input_files = flag.Args()
+	if len(app.input_files) == 0 {
+		ShowHelp()
+		os.Exit(1)
+	}
 
 	return app
 }
