@@ -15,6 +15,11 @@ type App struct {
 	output_file string
 	rename      bool
 	rename_pad  int
+
+	rename_counter   int
+	rename_max_files int
+
+	output_writer *zip.Writer
 }
 
 func ShowHelp() {
@@ -63,6 +68,35 @@ func NewApp() App {
 	return app
 }
 
+func (app *App) copyFiles(file string) error {
+	r, err := zip.OpenReader(file)
+	if err != nil {
+		return err
+	}
+
+	for _, fi := range r.File {
+		if !app.rename {
+			app.output_writer.Copy(fi)
+			continue
+		}
+
+		if app.rename_counter > app.rename_max_files {
+			return errors.Join(
+				r.Close(),
+				errors.New(fmt.Sprintf(
+					"reached maximum amount of files with %d padding, try increasing it",
+					app.rename_pad,
+				)))
+		}
+
+		fi.Name = fmt.Sprintf("%0*d%s", app.rename_pad, app.rename_counter, filepath.Ext(fi.Name))
+		app.output_writer.Copy(fi)
+		app.rename_counter += 1
+	}
+
+	return r.Close()
+}
+
 func (app *App) squash() error {
 	fo := os.Stdout
 	if app.output_file != "" {
@@ -73,38 +107,17 @@ func (app *App) squash() error {
 		}
 	}
 
-	gidx := 0
-	w := zip.NewWriter(fo)
-	max_files := int(math.Pow10(app.rename_pad)) - 1
+	app.rename_counter = 0
+	app.rename_max_files = int(math.Pow10(app.rename_pad)) - 1
+	app.output_writer = zip.NewWriter(fo)
+
 	for _, file := range app.input_files {
-		r, err := zip.OpenReader(file)
-		if err != nil {
-			return err
-		}
-
-		for _, fi := range r.File {
-			if app.rename {
-				if gidx > max_files {
-					return errors.New(fmt.Sprintf(
-						"reached maximum amount of files with %d padding, try increasing it",
-						app.rename_pad,
-					))
-				}
-
-				fi.Name = fmt.Sprintf("%0*d%s", app.rename_pad, gidx, filepath.Ext(fi.Name))
-			}
-
-			w.Copy(fi)
-			gidx += 1
-		}
-
-		err = r.Close()
-		if err != nil {
+		if err := app.copyFiles(file); err != nil {
 			return err
 		}
 	}
 
-	return w.Close()
+	return app.output_writer.Close()
 }
 
 func main() {
