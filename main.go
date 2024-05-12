@@ -36,7 +36,7 @@ Description:
   If OUTPUT_FILE is not specified, sqcbz will output to standard output.
 `
 
-	fmt.Println(help)
+	fmt.Fprintln(os.Stderr, help)
 	flag.PrintDefaults()
 }
 
@@ -56,7 +56,7 @@ func NewApp() App {
 
 	if *help1 || *help2 {
 		ShowHelp()
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	app.input_files = flag.Args()
